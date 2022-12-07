@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SiManis</title>
+    {{ js_resources|indent(4)|safe }}
+    {{ css_resources|indent(4)|safe }}
+    {{ plot_script|indent(4)|safe }}
+</head>
+<body>
+    <div style="display: flex; justify-content: center;">
+        {{ plot_div|indent(4)|safe }}
+    </div>
+
+
+    <script defer>
+        const update_color = async () => {
+        let status = await fetch("http://{{host}}:{{port}}/api/status")
+        let json = await status.json()
+        
+        circle = Bokeh.documents[0].get_model_by_name('circle');
+        line = Bokeh.documents[0].get_model_by_name('line');
+        color = json['color'][0];
+        
+        circle.glyph.fill_color = color;
+        circle.glyph.line_color = color;
+        line.glyph.line_color = color;
+    }
+
+    var interval = setInterval(function() {
+        try {
+            update_color()
+        }
+        catch {
+            console.log("Offline")
+        }
+    }, 1000);
+    </script>
+</body>
+</html>
