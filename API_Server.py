@@ -1,5 +1,5 @@
 import json
-from flask import Flask
+from flask import Flask, request, render_template
 from flask_cors import CORS
 import firebase_admin
 from firebase_admin import credentials, db
@@ -18,8 +18,18 @@ CORS(app, support_credentials=True)
 color = ['green', 'blue', 'orange', 'red', 'black']
 keadaan = ['Normal', 'Waspada', 'Siaga', 'Awas', 'Berbahaya']
 
+@app.route("/")
+def index():
+    hostname = request.headers.get('Host')
+
+    return render_template(
+        'documentation.html',
+        hostname = hostname
+    ).encode(encoding='UTF-8')
+
+
 @app.route('/api/status')
-def circle():
+def status():
     level = int(ref.child('level').get())
     titik = {
         'x': [11660422.33186175],

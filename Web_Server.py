@@ -1,4 +1,3 @@
-from bokeh.layouts import layout
 from bokeh.resources import INLINE
 from bokeh.embed import components
 from bokeh.tile_providers import OSM
@@ -64,6 +63,7 @@ p.circle('x', 'y', source=titik_kamera, size=0, color='blue', legend_label="Wasp
 p.circle('x', 'y', source=titik_kamera, size=0, color='orange', legend_label="Siaga")
 p.circle('x', 'y', source=titik_kamera, size=0, color='red', legend_label="Awas")
 p.circle('x', 'y', source=titik_kamera, size=0, color='black', legend_label="Berbahaya")
+p.line([11660422.33186175, 11660422.3319], [-331930.0131737783, -331930.0231737783], line_width=1, color='royalblue', legend_label="Garis DAS")
 
 script, div = components(p)
 
