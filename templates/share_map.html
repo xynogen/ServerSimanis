@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+
+
+{% block head %}
+    {{ js_resources|indent(4)|safe }}
+    {{ css_resources|indent(4)|safe }}
+    {{ plot_script|indent(4)|safe }}
+{% endblock %} 
+
+
+{% block body %}
+<div class="row">
+    <div class="col-12">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container">
+                <a class="navbar-brand" href="#">Simanis</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false"
+                    aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                    <ul class="navbar-nav">
+                        <li class="nav-item active">
+                            <a class="nav-link" href="/share?view=map&key={{share_key}}"><i class="bi bi-globe-asia-australia"></i> Map</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/share?view=cctv&key={{share_key}}" id="cctv"><i class="bi bi-camera-video"></i></i> CCTV</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div style="display: flex; justify-content: center;">
+            {{ plot_div|indent(4)|safe }}
+        </div>
+    </div>
+</div>
+
+<script defer>
+    window.addEventListener('load', function() {
+        cctv_link = document.getElementById('cctv').href
+        Bokeh.documents[0].get_model_by_name('taptool').callback.url = cctv_link
+    })
+</script>
+{% endblock %}
+

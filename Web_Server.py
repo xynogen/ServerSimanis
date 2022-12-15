@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 import os
 
 from datetime import timedelta
-from flask import Flask, render_template, session, redirect, url_for, flash
+from flask import Flask, render_template, session, redirect, url_for, flash, request
 from flask_cors import CORS
 
 from flask_wtf import FlaskForm
@@ -21,6 +21,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
 from hashlib import sha256
+import uuid
 
 # load enviroment variable from .env file
 load_dotenv()
@@ -54,6 +55,7 @@ class LoginForm(FlaskForm):
 
 color = ['green', 'blue', 'orange', 'red', 'black']
 keadaan = ['Normal', 'Waspada', 'Siaga', 'Awas', 'Warning']
+share_keys = {}
 
 hoverRectangle = AjaxDataSource(
     data_url = DATA_URL,
@@ -95,7 +97,7 @@ p.multi_line('x', 'y', source=aliran_sungai, line_color='green', line_width=1, n
 
 mockupHover = p.square('x', 'y', alpha = 0, source=hoverRectangle, size = 1100)
 p.add_tools(HoverTool(renderers=[mockupHover], tooltips=TOOLTIPS, line_policy='interp', description = 'Hover Sungai'))
-p.add_tools(TapTool(renderers=[mockupHover], callback=OpenURL(url='/cctv'), description = 'TapTool Sungai'))
+p.add_tools(TapTool(renderers=[mockupHover], callback=OpenURL(url='/cctv'), description = 'TapTool Sungai', name='taptool'))
 
 p.legend.title = 'Level Ketinggian Air'
 p.circle('x', 'y', source=titik_kamera, size=0, color=color[0], legend_label=keadaan[0])
@@ -151,6 +153,7 @@ def login_post():
         return redirect(url_for('login_get')) 
 
     session['username'] = _username
+    share_keys[_username] = str(uuid.uuid4())
     return redirect(url_for('map'))
 
 
@@ -159,18 +162,29 @@ def logout():
     if 'username' not in session:
         return redirect(url_for('login_get'))
 
+    share_keys[session['username']] = []
     session.pop("username")
     return redirect(url_for("index"))
 
 @app.route('/', methods=['GET'])
 def index():
-    if not 'username' in session:
+    if 'username' not in session:
         return redirect(url_for('login_get'))
         
     return redirect(url_for('map'))
 
 @app.route('/map', methods=['GET'])
 def map():
+    if 'username' not in session:
+        return redirect(url_for('login_get'))
+    
+    try:
+        SHARE_URL = f"http://{HOST_WEB}:{PORT_WEB}/share?view=map&key={share_keys[session['username']]}"
+    except:
+        share_keys[session['username']] = str(uuid.uuid4())
+        SHARE_URL = f"http://{HOST_WEB}:{PORT_WEB}/share?view=map&key={share_keys[session['username']]}"
+    
+
     return render_template(
         'map.html',
         plot_script = script,
@@ -178,12 +192,62 @@ def map():
         js_resources = INLINE.render_js(),
         css_resources = INLINE.render_css(),
         DATA_URL = DATA_URL,
-        share="test_share"
+        SHARE_URL = SHARE_URL,
+        username=session['username']
         ).encode(encoding='UTF-8')
 
-@app.route("/share", methods=['GET'])
+@app.route('/share', methods=['GET'])
 def share():
-    return "shared"
+    view = request.args.get('view')
+    share_key = request.args.get('key')
+
+    if share_key not in share_keys.values():
+        flash('Invalid Link, Please Relogin', 'error')
+        return redirect(url_for('login_get'))
+
+    if view == 'map':
+        return render_template(
+            'share_map.html',
+            share_key = share_key,
+            plot_script = script,
+            plot_div = div,
+            js_resources = INLINE.render_js(),
+            css_resources = INLINE.render_css(),
+        ).encode(encoding='UTF-8')
+    elif view == 'cctv':
+        return render_template(
+            'share_cctv.html',
+            share_key = share_key
+        ).encode(encoding='UTF-8')
+    else:
+        flash('Invalid View, Please Check the Link Again', 'error')
+        return redirect(url_for('login_get'))
+
+@app.route('/cctv', methods=['GET'])
+def cctv():
+    if 'username' not in session:
+        return redirect(url_for('login_get'))
+    
+    try:
+        SHARE_URL = f"http://{HOST_WEB}:{PORT_WEB}/share?view=map&key={share_keys[session['username']]}"
+    except:
+        share_keys[session['username']] = str(uuid.uuid4())
+        SHARE_URL = f"http://{HOST_WEB}:{PORT_WEB}/share?view=map&key={share_keys[session['username']]}"
+
+    return render_template(
+        'cctv.html',
+        SHARE_URL=SHARE_URL,
+        username=session['username']
+    ).encode(encoding='UTF-8')
+
+@app.route('/refresh', methods=['GET'])
+def refresh():
+    if 'username' not in session:
+        return redirect(url_for('login_get'))
+    
+    share_keys[session['username']] = str(uuid.uuid4())
+    return redirect(url_for('map'))
+
 
 if __name__ == '__main__':
     app.run(HOST_WEB, port=PORT_WEB, debug=True)

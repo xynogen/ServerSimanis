@@ -1,13 +1,6 @@
 {% extends 'base.html' %}
 
-{% block head %}
-{{ js_resources|indent(4)|safe }}
-{{ css_resources|indent(4)|safe }}
-{{ plot_script|indent(4)|safe }}
-{% endblock %}
-
 {% block body %}
-
 <div class="row">
     <div class="col-12">
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -59,50 +52,11 @@
         </div>
     </div>
 </div>
-
-<div class="row">
-    <div class="col-12">
-        <div style="display: flex; justify-content: center;">
-            {{ plot_div|indent(4)|safe }}
-        </div>
-    </div>
-</div>
-
 <div id="secretInfo" style="display: none;">{{SHARE_URL}}</div>
 
-
-
-<style>
-    body {
-        overflow-y: hidden;
-        overflow-x: hidden;
-    }
-</style>
+<h1>CCTV</h1>
 
 <script defer>
-    const update_color = async () => {
-        let status = await fetch("{{DATA_URL}}")
-        let json = await status.json()
-
-        circle = Bokeh.documents[0].get_model_by_name('circle');
-        line = Bokeh.documents[0].get_model_by_name('line');
-        color = json['color'][0];
-
-        circle.glyph.fill_color = color;
-        circle.glyph.line_color = color;
-        line.glyph.line_color = color;
-    }
-
-    var interval = setInterval(function () {
-        try {
-            update_color()
-        }
-        catch {
-            console.log("Offline")
-        }
-    }, 1000);
-
-
     var $body = document.getElementsByTagName('body')[0];
     var $btnCopy = document.getElementById('share');
     var secretInfo = document.getElementById('secretInfo').textContent;
@@ -122,8 +76,5 @@
         const toast = new bootstrap.Toast(toastLiveExample)
         toast.show()
     });
-
-
 </script>
-
 {% endblock %}
