@@ -77,7 +77,7 @@ TOOLTIPS = [
     ('Keadaan', '@keadaan')
 ]
 
-p = figure(width=1366, height=670)
+p = figure(width=1360, height=600)
 p.sizing_mode = 'scale_width'
 p.match_aspect = True
 p.xgrid.visible = False
@@ -162,16 +162,14 @@ def logout():
     session.pop("username")
     return redirect(url_for("index"))
 
-@app.route('/')
+@app.route('/', methods=['GET'])
 def index():
-    # if not 'username' in session:
-    #     return redirect(url_for('login_get'))
+    if not 'username' in session:
+        return redirect(url_for('login_get'))
         
-    return render_template(
-        'index.html'
-    ).encode(encoding='UTF-8')
+    return redirect(url_for('map'))
 
-@app.route('/map')
+@app.route('/map', methods=['GET'])
 def map():
     return render_template(
         'map.html',
@@ -179,9 +177,13 @@ def map():
         plot_div = div,
         js_resources = INLINE.render_js(),
         css_resources = INLINE.render_css(),
-        DATA_URL = DATA_URL
+        DATA_URL = DATA_URL,
+        share="test_share"
         ).encode(encoding='UTF-8')
 
+@app.route("/share", methods=['GET'])
+def share():
+    return "shared"
 
 if __name__ == '__main__':
     app.run(HOST_WEB, port=PORT_WEB, debug=True)
