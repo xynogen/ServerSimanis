@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-4 col-md-6 col-sm-8 col-xs-12 mx-auto" style="margin-top: 8%;">
+            <div class="card card-signin my-5">
+                <div class="card-body">
+                    <h5 class="card-title text-center">Login</h5>
+                    <form class="form-signin" action="/login" method="POST">
+                        {{ loginForm.csrf_token }}
+                        <div class="form-label-group pt-3">
+                            <input type="text" name="username" id="inputEmail" class="form-control"
+                                placeholder="Username" required autofocus />
+                        </div>
+
+                        <div class="form-label-group pt-3">
+                            <input type="password" name="password" id="inputPassword" class="form-control"
+                                placeholder="Password" required />
+                        </div>
+
+                        <div class="my-center pt-3">
+                            <button class="btn btn-md btn-primary btn-block text-uppercase" type="submit">
+                                Login
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+
+                    {% if category == 'error' %}
+                        <div class="alert alert-danger align-items-center" role="alert">
+                            <div>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-triangle-fill" viewBox="0 0 16 16">
+                                    <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                                </svg> 
+                                {{ message }}
+                            </div>
+                        </div>
+                    {% endif %}
+                
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        </div>
+
+       
+    </div>
+</div>
+
+<style>
+    .my-center {
+        display: grid;
+        place-items: center;
+    }
+    
+    .container, .row {
+    height: 100vh;
+    }
+</style>
+{% endblock %}
