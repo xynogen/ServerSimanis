@@ -1,13 +1,10 @@
 {% extends 'base.html' %}
 
-
-
 {% block head %}
     {{ js_resources|indent(4)|safe }}
     {{ css_resources|indent(4)|safe }}
     {{ plot_script|indent(4)|safe }}
 {% endblock %} 
-
 
 {% block body %}
 <div class="row">
@@ -23,10 +20,13 @@
                 <div class="collapse navbar-collapse" id="navbarNavDropdown">
                     <ul class="navbar-nav">
                         <li class="nav-item active">
-                            <a class="nav-link" href="/share?view=map&key={{share_key}}"><i class="bi bi-globe-asia-australia"></i> Map</a>
+                            <a class="nav-link" href="/share?view=map&key={{SHARE_KEY}}"><i class="bi bi-globe-asia-australia"></i> Map</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/share?view=cctv&key={{share_key}}" id="cctv"><i class="bi bi-camera-video"></i></i> CCTV</a>
+                            <a class="nav-link" href="/share?view=cctv&key={{SHARE_KEY}}" id="cctv"><i class="bi bi-camera-video"></i></i> CCTV</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" id="share"><i class="bi bi-person"></i> Guest</a>
                         </li>
                     </ul>
                 </div>
@@ -43,11 +43,29 @@
     </div>
 </div>
 
-<script defer>
-    window.addEventListener('load', function() {
-        cctv_link = document.getElementById('cctv').href
-        Bokeh.documents[0].get_model_by_name('taptool').callback.url = cctv_link
-    })
+<script>
+    const update_color = async () => {
+        let status = await fetch("{{DATA_URL}}")
+        let json = await status.json()
+
+        circle = Bokeh.documents[0].get_model_by_name('circle');
+        line = Bokeh.documents[0].get_model_by_name('line');
+        color = json['color'][0];
+
+        circle.glyph.fill_color = color;
+        circle.glyph.line_color = color;
+        line.glyph.line_color = color;
+    }
+
+    var interval = setInterval(function () {
+        try {
+            update_color()
+        }
+        catch {
+            console.log("Offline")
+        }
+    }, 1000);
+
 </script>
 {% endblock %}
 
