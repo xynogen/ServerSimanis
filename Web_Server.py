@@ -117,7 +117,7 @@ p.multi_line('x', 'y', source=aliran_sungai, line_color='green', line_width=1, n
 
 mockupHover = p.square('x', 'y', alpha = 0, source=hoverRectangle, size = 1100)
 p.add_tools(HoverTool(renderers=[mockupHover], tooltips=TOOLTIPS, line_policy='interp', description = 'Hover Sungai'))
-
+p.add_tools(TapTool(renderers=[mockupHover], callback=OpenURL(url='/cctv'), description = 'TapTool Sungai', name='taptool'))
 p.legend.title = 'Level Ketinggian Air'
 p.circle('x', 'y', source=titik_kamera, size=0, color=color[0], legend_label=keadaan[0])
 p.circle('x', 'y', source=titik_kamera, size=0, color=color[1], legend_label=keadaan[1])
@@ -166,9 +166,11 @@ def login_post():
         return redirect(url_for('login_get')) 
 
     share_key = dbSession.query(ShareKeys).filter(ShareKeys.username == _username).first()
-
+    api_key = dbSession.query(APIKeys).first()
+    
     session['username'] = _username
     session['share_key'] = share_key.share_key
+    session['api_key'] = api_key.api_key
     return redirect(url_for('map'))
 
 
@@ -179,6 +181,7 @@ def logout():
 
     session.pop("username")
     session.pop("share_key")
+    session.pop("api_key")
     return redirect(url_for("index"))
 
 @app.route('/', methods=['GET'])
@@ -193,12 +196,11 @@ def map():
     if 'username' not in session:
         return redirect(url_for('login_get'))
 
-    SHARE_URL = f"http://{HOST_WEB}:{PORT_WEB}/share?view=map&key={session['share_key']}"
-
+    SHARE_URL = f"http://{HOST_WEB}:{PORT_WEB}/share?view=map&key={session['share_key']}&api_key={session['api_key']}"
+    
     if request.MOBILE:
         p.width = 600
         p.height = 1360
-        p.add_tools(TapTool(renderers=[mockupHover], callback=OpenURL(url='/cctv'), description = 'TapTool Sungai', name='taptool'))
         script, div = components(p)
 
         return render_template(
@@ -212,10 +214,8 @@ def map():
             username=session['username']
         ).encode(encoding='UTF-8')
     
-    
     p.width = 1360
     p.height = 600
-    p.add_tools(TapTool(renderers=[mockupHover], callback=OpenURL(url='/cctv'), description = 'TapTool Sungai', name='taptool'))
     script, div = components(p)
 
     return render_template(
@@ -234,21 +234,27 @@ def map():
 def share():
     VIEW = request.args.get('view')
     SHARE_KEY = request.args.get('key')
+    API_KEY = request.args.get('api_key')
 
     DBSession = sessionmaker(bind=engine)
     dbSession = DBSession()
 
     share_key_qr = dbSession.query(ShareKeys).filter(ShareKeys.share_key == SHARE_KEY).first()
+    api_key_qr = dbSession.query(APIKeys).filter(APIKeys.api_key == API_KEY).first()
 
     if not share_key_qr:
         flash('Invalid Link, Please Relogin', 'error')
+        return redirect(url_for('login_get'))
+    
+    if not api_key_qr:
+        flash('Invalid API Key', 'error')
         return redirect(url_for('login_get'))
     
     if VIEW == 'map':
         if request.MOBILE:
             p.width = 600
             p.height = 1360
-            p.add_tools(TapTool(renderers=[mockupHover], callback=OpenURL(url='/cctv'), description = 'TapTool Sungai', name='taptool'))
+            p.remove_tools
             script, div = components(p)
 
             return render_template(
@@ -258,12 +264,12 @@ def share():
                 js_resources = INLINE.render_js(),
                 css_resources = INLINE.render_css(),
                 DATA_URL = DATA_URL,
-                SHARE_KEY = SHARE_KEY
+                SHARE_KEY = SHARE_KEY,
+                API_KEY = API_KEY
             ).encode(encoding='UTF-8')
             
         p.width = 1360
         p.height = 600
-        p.add_tools(TapTool(renderers=[mockupHover], callback=OpenURL(url=f'/share?view=cctv&key={SHARE_KEY}'), description = 'TapTool Sungai', name='taptool'))
         script, div = components(p)
 
         return render_template(
@@ -273,13 +279,17 @@ def share():
             js_resources = INLINE.render_js(),
             css_resources = INLINE.render_css(),
             DATA_URL = DATA_URL,
-            SHARE_KEY = SHARE_KEY
+            SHARE_KEY = SHARE_KEY,
+            API_KEY = API_KEY
         ).encode(encoding='UTF-8')
 
     elif VIEW == 'cctv':
+        IMAGE_URL = f"http://{HOST_API}:{PORT_API}/api/capture?api_key={session['api_key']}&api_key={API_KEY}"
         return render_template(
             'share_cctv.html',
-            SHARE_KEY = SHARE_KEY
+            IMAGE_URL = IMAGE_URL,
+            SHARE_KEY = SHARE_KEY,
+            API_KEY = API_KEY
         ).encode(encoding='UTF-8')
         
     else:
@@ -291,12 +301,13 @@ def cctv():
     if 'username' not in session:
         return redirect(url_for('login_get'))
     
-    
-    SHARE_URL = f"http://{HOST_WEB}:{PORT_WEB}/share?view=cctv&key={session['share_key']}"
+    SHARE_URL = f"http://{HOST_WEB}:{PORT_WEB}/share?view=cctv&key={session['share_key']}&api_key={session['api_key']}"
+    IMAGE_URL = f"http://{HOST_API}:{PORT_API}/api/capture?api_key={session['api_key']}"
 
     return render_template(
         'cctv.html',
         SHARE_URL=SHARE_URL,
+        IMAGE_URL=IMAGE_URL,
         username=session['username']
     ).encode(encoding='UTF-8')
 
@@ -318,4 +329,4 @@ def refresh():
 
 
 if __name__ == '__main__':
-    app.run(HOST_WEB, port=PORT_WEB, debug=True)
+    app.run('0.0.0.0', port=PORT_WEB, debug=True)

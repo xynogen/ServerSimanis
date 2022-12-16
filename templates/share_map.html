@@ -20,10 +20,10 @@
                 <div class="collapse navbar-collapse" id="navbarNavDropdown">
                     <ul class="navbar-nav">
                         <li class="nav-item active">
-                            <a class="nav-link" href="/share?view=map&key={{SHARE_KEY}}"><i class="bi bi-globe-asia-australia"></i> Map</a>
+                            <a class="nav-link" href="/share?view=map&key={{SHARE_KEY}}&api_key={{API_KEY}}"><i class="bi bi-globe-asia-australia"></i> Map</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/share?view=cctv&key={{SHARE_KEY}}" id="cctv"><i class="bi bi-camera-video"></i></i> CCTV</a>
+                            <a class="nav-link" href="/share?view=cctv&key={{SHARE_KEY}}&api_key={{API_KEY}}" id="cctv"><i class="bi bi-camera-video"></i></i> CCTV</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="#" id="share"><i class="bi bi-person"></i> Guest</a>
@@ -44,6 +44,11 @@
 </div>
 
 <script>
+    window.addEventListener('load', function() {
+        cctv_link = document.getElementById('cctv').href
+        Bokeh.documents[0].get_model_by_name('taptool').callback.url = cctv_link
+    })
+    
     const update_color = async () => {
         let status = await fetch("{{DATA_URL}}")
         let json = await status.json()
