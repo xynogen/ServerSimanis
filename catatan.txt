@@ -1,0 +1,3 @@
+sudo docker build -t "webserver:latest" .
+sudo docker run --detach --publish 8081:8081 --name APIServer --restart always webserver:latest /bin/sh -c 'cd /WebServer; python3 API_Server.py'
+sudo docker run --detach --publish 8080:8080 --name WebServer --restart always webserver:latest /bin/sh -c 'cd /WebServer; python3 Web_Server.py'
