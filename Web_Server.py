@@ -35,6 +35,8 @@ PORT_WEB = os.environ['PORT_WEB']
 DB_NAME = os.environ["DB_NAME"]
 DB_URI = f'sqlite:///{DB_NAME}'
 
+DEBUG = os.environ['DEBUG']
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'waterlevel-webserver'
@@ -74,8 +76,8 @@ keadaan = ['Normal', 'Waspada', 'Siaga', 'Awas', 'Warning']
 DBSession = sessionmaker(bind=engine)
 dbSession = DBSession()
 api_key = dbSession.query(APIKeys).first()
-
 DATA_URL = f'http://{HOST_API}:{PORT_API}/api/status?api_key={api_key.api_key}'
+dbSession.close()
 
 hoverRectangle = AjaxDataSource(
     data_url = DATA_URL,
@@ -156,7 +158,7 @@ def login_post():
     _password_hash = sha256(_password.encode()).hexdigest()
     
     user = dbSession.query(Users).filter(Users.username == _username).first()
-
+    
     if not user:
         flash('Wrong Username', 'error')
         return redirect(url_for('login_get'))
@@ -167,7 +169,8 @@ def login_post():
 
     share_key = dbSession.query(ShareKeys).filter(ShareKeys.username == _username).first()
     api_key = dbSession.query(APIKeys).first()
-    
+    dbSession.close()
+
     session['username'] = _username
     session['share_key'] = share_key.share_key
     session['api_key'] = api_key.api_key
@@ -242,8 +245,10 @@ def share():
     share_key_qr = dbSession.query(ShareKeys).filter(ShareKeys.share_key == SHARE_KEY).first()
     api_key_qr = dbSession.query(APIKeys).filter(APIKeys.api_key == API_KEY).first()
 
+    dbSession.close()
+
     if not share_key_qr:
-        flash('Invalid Link, Please Relogin', 'error')
+        flash('Invalid Link, your Session is No Longer Available', 'error')
         return redirect(url_for('login_get'))
     
     if not api_key_qr:
@@ -284,12 +289,14 @@ def share():
         ).encode(encoding='UTF-8')
 
     elif VIEW == 'cctv':
-        IMAGE_URL = f"http://{HOST_API}:{PORT_API}/api/capture?api_key={session['api_key']}&api_key={API_KEY}"
+        IMAGE_URL = f"http://{HOST_API}:{PORT_API}/api/capture?&api_key={API_KEY}"
+        DOWNLOAD_URL = f"http://{HOST_API}:{PORT_API}/api/download?&api_key={API_KEY}"
         return render_template(
             'share_cctv.html',
             IMAGE_URL = IMAGE_URL,
             SHARE_KEY = SHARE_KEY,
-            API_KEY = API_KEY
+            API_KEY = API_KEY,
+            DOWNLOAD_URL = DOWNLOAD_URL
         ).encode(encoding='UTF-8')
         
     else:
@@ -324,9 +331,12 @@ def refresh():
     dbSession.query(ShareKeys).filter(ShareKeys.username == session['username']).update({'share_key': new_share_key})
     dbSession.commit()
 
+    dbSession.close()
+
     session['share_key'] = new_share_key
     return redirect(url_for('map'))
 
 
 if __name__ == '__main__':
-    app.run('0.0.0.0', port=PORT_WEB, debug=True)
+    debug = True if DEBUG == 'true' else False
+    app.run('0.0.0.0', port=PORT_WEB, debug=debug)

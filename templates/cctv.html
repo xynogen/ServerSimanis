@@ -60,7 +60,6 @@
 
     <!-- The Modal -->
     <div id="myModal" class="modal">
-
         <!-- The Close Button -->
         <span class="close">&times;</span>
 
@@ -69,6 +68,15 @@
 
         <!-- Modal Caption (Image Text) -->
         <div id="caption"></div>
+        
+        <div class="row pb-3">
+            <a href="{{DOWNLOAD_URL}}" class="text-center" download="Sungai.jpg">
+                <button class="btn btn-md btn-primary btn-block text-uppercase">
+                    <i class="bi bi-cloud-arrow-down"></i> Download
+                </button>
+            </a>
+        </div>
+        
     </div>
 </div>
 
@@ -81,6 +89,11 @@
 
     #myImg:hover {
         opacity: 0.7;
+    }
+
+    body {
+        overflow-y: hidden;
+        overflow-x: hidden;
     }
 
     /* center the image */
@@ -132,7 +145,7 @@
         text-align: center;
         color: #ccc;
         padding: 10px 0;
-        height: 150px;
+        height: 50px;
     }
 
     /* Add Animation - Zoom in the Modal */

@@ -23,11 +23,14 @@ PORT_API = os.environ['PORT_API']
 DB_NAME = os.environ["DB_NAME"]
 DB_URI = f'sqlite:///{DB_NAME}'
 
+DEBUG = os.environ['DEBUG']
+
 FIREBASE_CRED_FILE = os.environ['FIREBASE_CRED_FILE']
 FIREBASE_BUCKET = os.environ['FIREBASE_BUCKET']
 FIREBASE_URL = os.environ['FIREBASE_URL']
 
 FILENAME = os.environ['FILENAME']
+FILENAME_CLASS = os.environ['FILENAME_CLASS']
 
 Base = declarative_base()
 engine = sql.create_engine(DB_URI)
@@ -36,8 +39,7 @@ cred = credentials.Certificate(FIREBASE_CRED_FILE)
 firebase_app = firebase_admin.initialize_app(cred, {"storageBucket": FIREBASE_BUCKET})
 level = 0
 
-ref = db.reference(url=FIREBASE_URL,
-                    app=firebase_app)
+ref = db.reference(url=FIREBASE_URL, app=firebase_app)
 
 app = Flask(__name__)
 CORS(app, support_credentials=True)
@@ -67,6 +69,8 @@ def status():
     api_key = request.args.get("api_key")
     API_KEY = dbSession.query(APIKeys).first()
 
+    dbSession.close()
+
     if api_key != API_KEY.api_key:
         return json.dumps({'message': 'API Keys Needed'})
 
@@ -88,11 +92,13 @@ def capture():
     api_key = request.args.get("api_key")
     API_KEY = dbSession.query(APIKeys).first()
     
+    dbSession.close()
+
     if api_key != API_KEY.api_key:
-        return json.dumps({'message': 'API Keys Needed'})
+        return json.dumps({'message': 'API Keys Needed'})    
 
     bucket = storage.bucket(app=firebase_app)
-    blob = bucket.get_blob(FILENAME)
+    blob = bucket.get_blob(FILENAME_CLASS)
     image = blob.download_as_bytes()
 
     return send_file(
@@ -102,5 +108,31 @@ def capture():
         download_name=f'{FILENAME}.jpg'
     )
 
+@app.route('/api/download', methods=['GET'])
+def download():
+    DBSession = sessionmaker(bind=engine)
+    dbSession = DBSession()
+
+    api_key = request.args.get("api_key")
+    API_KEY = dbSession.query(APIKeys).first()
+    
+    dbSession.close()
+
+    if api_key != API_KEY.api_key:
+        return json.dumps({'message': 'API Keys Needed'})
+
+    bucket = storage.bucket(app=firebase_app)
+    blob = bucket.get_blob(FILENAME_CLASS)
+    image = blob.download_as_bytes()
+
+    return send_file(
+        io.BytesIO(image),
+        mimetype='image/jpeg',
+        as_attachment=True,
+        download_name=f'{FILENAME}.jpg'
+    )
+
 if __name__ == "__main__":
-    app.run('0.0.0.0', port=PORT_API, debug=True)
+    debug = True if DEBUG == 'true' else False
+
+    app.run('0.0.0.0', port=PORT_API, debug=debug)
