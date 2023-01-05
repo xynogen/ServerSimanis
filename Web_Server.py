@@ -199,6 +199,11 @@ def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'),
                                'icons/logos/logo_SiPeDAS.ico', mimetype='image/vnd.microsoft.icon')
 
+@app.route('/logo.png')
+def logo():
+    return send_from_directory(os.path.join(app.root_path, 'static'),
+                               'icons/logos/logo_SiPeDAS.png', mimetype='image/png')
+
 @app.route('/map', methods=['GET'])
 def map():
     if 'username' not in session:
