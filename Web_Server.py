@@ -197,7 +197,7 @@ def index():
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'),
-                               '/icons/logo/logo_SiPeDAS.ico', mimetype='image/vnd.microsoft.icon')
+                               'icons/logos/logo_SiPeDAS.ico', mimetype='image/vnd.microsoft.icon')
 
 @app.route('/map', methods=['GET'])
 def map():

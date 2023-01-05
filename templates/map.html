@@ -13,7 +13,7 @@
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
             <div class="container">
                 <a class="navbar-brand" href="#">
-                    <img src="{{url_for('static', filename='icons/logo/logo_SiPEDAS.png')}}" alt="Logo" width="32" height="32" class="d-inline-block align-text-top">
+                    <img src="{{url_for('static', filename='icons/logos/logo_SiPEDAS.png')}}" alt="Logo" width="32" height="32" class="d-inline-block align-text-top">
                     SiPeDAS
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
@@ -51,8 +51,10 @@
         <div class="toast-container position-fixed top-0 end-0 p-3">
             <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
                 <div class="toast-header">
-                    <strong class="me-auto">Simanis</strong>
-                    <small>Info</small>
+                    <a class="navbar-brand" href="#">
+                        <img src="{{url_for('static', filename='icons/logos/logo_SiPEDAS.png')}}" alt="Logo" width="32" height="32" class="d-inline-block align-text-top">
+                    </a>
+                    SiPeDAS
                     <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
                 </div>
                 <div class="toast-body">
